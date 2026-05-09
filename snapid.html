@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnapID — Identify Anything Instantly</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F9FAFB; color: #111827; min-height: 100vh; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; display: flex; flex-direction: column; }
+  .header { padding: 16px 20px 12px; border-bottom: 0.5px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 20px; font-weight: 600; color: #111827; }
+  .logo span { color: #5B4BD4; }
+  .pro-badge { font-size: 11px; padding: 3px 8px; border-radius: 100px; background: #EEEDFE; color: #3C3489; font-weight: 500; }
+  .api-section { padding: 12px 20px; background: #EEEDFE; border-bottom: 0.5px solid #AFA9EC; }
+  .api-label { font-size: 11px; color: #3C3489; margin-bottom: 6px; font-weight: 500; }
+  .api-row { display: flex; gap: 8px; }
+  .api-input { flex: 1; border: 0.5px solid #AFA9EC; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-family: monospace; background: #fff; color: #111827; outline: none; }
+  .api-save { font-size: 12px; padding: 7px 14px; border-radius: 8px; background: #5B4BD4; color: #fff; border: none; cursor: pointer; }
+  .upload-area { margin: 20px; border: 1.5px dashed #D1D5DB; border-radius: 16px; padding: 32px 20px; text-align: center; cursor: pointer; background: #F9FAFB; transition: all 0.2s; }
+  .upload-area:hover { border-color: #5B4BD4; background: #EEEDFE; }
+  .upload-icon { width: 56px; height: 56px; border-radius: 50%; background: #EEEDFE; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+  .upload-icon svg { width: 28px; height: 28px; stroke: #5B4BD4; fill: none; stroke-width: 1.5; }
+  .upload-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .upload-sub { font-size: 13px; color: #6B7280; }
+  .upload-btn { display: inline-block; margin-top: 14px; font-size: 13px; padding: 8px 20px; border-radius: 8px; background: #5B4BD4; color: #fff; border: none; cursor: pointer; }
+  input[type=file] { display: none; }
+  .preview-wrap { margin: 0 20px; position: relative; }
+  .preview-img { width: 100%; border-radius: 12px; object-fit: cover; max-height: 260px; display: block; }
+  .clear-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.6); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .clear-btn svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2; }
+  .scan-wrap { padding: 16px 20px; }
+  .scan-btn { width: 100%; padding: 14px; border-radius: 12px; background: #5B4BD4; color: #fff; font-size: 15px; font-weight: 500; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .scan-btn:hover { background: #3C3489; }
+  .scan-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; }
+  .loading { padding: 32px 20px; text-align: center; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #EEEDFE; border-top-color: #5B4BD4; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: #6B7280; }
+  .result { margin: 0 20px 20px; }
+  .result-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .result-name { font-size: 20px; font-weight: 600; flex: 1; }
+  .conf-badge { font-size: 12px; padding: 4px 10px; border-radius: 100px; background: #EAF3DE; color: #3B6D11; font-weight: 500; flex-shrink: 0; margin-left: 8px; margin-top: 3px; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .result-item { background: #F9FAFB; border: 0.5px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; }
+  .result-label { font-size: 11px; color: #6B7280; margin-bottom: 3px; }
+  .result-val { font-size: 14px; font-weight: 500; }
+  .result-desc { background: #F9FAFB; border: 0.5px solid #E5E7EB; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .result-desc-label { font-size: 11px; color: #6B7280; margin-bottom: 6px; }
+  .result-desc-text { font-size: 13px; color: #374151; line-height: 1.6; }
+  .share-row { display: flex; gap: 8px; }
+  .share-btn { flex: 1; padding: 10px; border-radius: 10px; border: 0.5px solid #E5E7EB; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .new-btn { flex: 1; padding: 10px; border-radius: 10px; background: #5B4BD4; color: #fff; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
+  .error-box { margin: 0 20px; padding: 14px; background: #FCEBEB; border: 0.5px solid #F09595; border-radius: 10px; font-size: 13px; color: #A32D2D; line-height: 1.5; white-space: pre-wrap; }
+  .examples { padding: 0 20px 20px; }
+  .examples-label { font-size: 12px; color: #6B7280; margin-bottom: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; padding: 5px 12px; border-radius: 100px; border: 0.5px solid #E5E7EB; background: #fff; color: #374151; cursor: pointer; }
+  .bottom-nav { margin-top: auto; border-top: 0.5px solid #E5E7EB; display: flex; padding: 8px 0 16px; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #9CA3AF; cursor: pointer; padding: 4px 0; }
+  .nav-item.active { color: #5B4BD4; }
+  .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">Snap<span>ID</span></div>
+    <div class="pro-badge">✦ AI Powered</div>
+  </div>
+  <div class="api-section">
+    <div class="api-label">Claude API Key — get free at console.anthropic.com</div>
+    <div class="api-row">
+      <input class="api-input" id="apiKey" type="password" placeholder="sk-ant-api03-..." />
+      <button class="api-save" onclick="saveKey()">Save</button>
+    </div>
+  </div>
+  <div id="uploadSection">
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <div class="upload-title">Take or upload a photo</div>
+      <div class="upload-sub">Coins · Antiques · Plants · Jewelry · Art · Anything</div>
+      <button class="upload-btn">Choose Photo</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+    <div class="examples">
+      <div class="examples-label">Works with any object:</div>
+      <div class="chips">
+        <div class="chip">🪙 Coins</div>
+        <div class="chip">🏺 Antiques</div>
+        <div class="chip">🌿 Plants</div>
+        <div class="chip">💎 Jewelry</div>
+        <div class="chip">🎨 Art</div>
+        <div class="chip">🍄 Mushrooms</div>
+        <div class="chip">🦋 Insects</div>
+        <div class="chip">🪨 Rocks & Minerals</div>
+      </div>
+    </div>
+  </div>
+  <div id="previewSection" class="hidden">
+    <div class="preview-wrap">
+      <img id="previewImg" class="preview-img" src="" alt="Preview">
+      <button class="clear-btn" onclick="resetApp()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="scan-wrap">
+      <button class="scan-btn" onclick="identify()">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Identify Now
+      </button>
+    </div>
+  </div>
+  <div id="loadingSection" class="hidden">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Analyzing with Claude AI...</div>
+    </div>
+  </div>
+  <div id="resultSection" class="hidden">
+    <div class="result">
+      <div class="result-header">
+        <div class="result-name" id="rName">—</div>
+        <div class="conf-badge" id="rConf">—</div>
+      </div>
+      <div class="result-grid">
+        <div class="result-item"><div class="result-label">Category</div><div class="result-val" id="rCat">—</div></div>
+        <div class="result-item"><div class="result-label">Est. Value</div><div class="result-val" id="rVal">—</div></div>
+        <div class="result-item"><div class="result-label">Origin / Period</div><div class="result-val" id="rOrigin">—</div></div>
+        <div class="result-item"><div class="result-label">Rarity</div><div class="result-val" id="rRarity">—</div></div>
+      </div>
+      <div class="result-desc">
+        <div class="result-desc-label">Description</div>
+        <div class="result-desc-text" id="rDesc">—</div>
+      </div>
+      <div class="share-row">
+        <button class="share-btn" onclick="shareResult()">📤 Share</button>
+        <button class="new-btn" onclick="resetApp()">+ New Scan</button>
+      </div>
+    </div>
+  </div>
+  <div id="errorSection" class="hidden">
+    <div class="error-box" id="errorMsg"></div>
+    <div class="scan-wrap"><button class="scan-btn" onclick="resetApp()">Try Again</button></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Scan
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Saved
+    </div>
+  </div>
+</div>
+<script>
+let b64=null,mtype=null;
+function saveKey(){const k=document.getElementById('apiKey').value.trim();if(k){sessionStorage.setItem('sid_k',k);const b=document.querySelector('.api-save');b.textContent='Saved ✓';b.style.background='#3B6D11';setTimeout(()=>{b.textContent='Save';b.style.background='#5B4BD4';},2000);}}
+function getKey(){return document.getElementById('apiKey').value.trim()||sessionStorage.getItem('sid_k')||'';}
+window.onload=()=>{const s=sessionStorage.getItem('sid_k');if(s)document.getElementById('apiKey').value=s;};
+function handleFile(file){if(!file)return;const r=new FileReader();r.onload=(e)=>{const d=e.target.result;mtype=file.type||'image/jpeg';b64=d.split(',')[1];document.getElementById('previewImg').src=d;show('previewSection');hide('uploadSection');hide('resultSection');hide('errorSection');hide('loadingSection');};r.readAsDataURL(file);}
+async function identify(){const key=getKey();if(!key){showError('Please enter your Claude API key above.');return;}if(!b64)return;hide('previewSection');show('loadingSection');hide('resultSection');hide('errorSection');
+const prompt=`You are an expert identifier and appraiser. Analyze this image carefully.\n\nRespond ONLY with a JSON object, no markdown, no code fences:\n{\n  "name": "Specific name of the object",\n  "confidence": "95%",\n  "category": "Category (Coin, Plant, Antique, Jewelry, Art, Animal, Mineral, Food, Other)",\n  "estimated_value": "Price range in USD or N/A if not applicable",\n  "origin_period": "Country of origin or time period",\n  "rarity": "Common / Uncommon / Rare / Very Rare",\n  "description": "2-3 sentences with interesting facts and what makes this special."\n}`;
+try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mtype,data:b64}},{type:'text',text:prompt}]}]})});
+const data=await res.json();if(data.error){showError('API Error: '+data.error.message);return;}
+let text=data.content[0].text.trim().replace(/```json|```/g,'').trim();
+const result=JSON.parse(text);
+document.getElementById('rName').textContent=result.name||'—';document.getElementById('rConf').textContent=result.confidence||'—';document.getElementById('rCat').textContent=result.category||'—';document.getElementById('rVal').textContent=result.estimated_value||'—';document.getElementById('rOrigin').textContent=result.origin_period||'—';document.getElementById('rRarity').textContent=result.rarity||'—';document.getElementById('rDesc').textContent=result.description||'—';
+hide('loadingSection');show('resultSection');}catch(err){showError('Something went wrong. Check your API key and try again.\n\n'+err.message);}}
+function shareResult(){const name=document.getElementById('rName').textContent;const val=document.getElementById('rVal').textContent;const text='AI identified this as: '+name+' (Est. value: '+val+') — via SnapID';if(navigator.share){navigator.share({title:'SnapID Result',text});}else{navigator.clipboard.writeText(text).then(()=>alert('Copied!'));}}
+function resetApp(){b64=null;mtype=null;document.getElementById('fileInput').value='';show('uploadSection');hide('previewSection');hide('loadingSection');hide('resultSection');hide('errorSection');}
+function showError(msg){hide('loadingSection');hide('previewSection');document.getElementById('errorMsg').textContent=msg;show('errorSection');}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+</script>
+</body>
+</html>
