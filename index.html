@@ -11,8 +11,9 @@
   .header { padding: 16px 20px 12px; border-bottom: 0.5px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; }
   .logo { font-size: 20px; font-weight: 600; color: #111827; }
   .logo span { color: #5B4BD4; }
-  .scans-left { font-size: 12px; padding: 4px 10px; border-radius: 100px; background: #EEEDFE; color: #3C3489; font-weight: 500; }
+  .scans-left { font-size: 12px; padding: 4px 10px; border-radius: 100px; background: #EEEDFE; color: #3C3489; font-weight: 500; cursor: pointer; }
   .scans-left.low { background: #FAEEDA; color: #633806; }
+  .scans-left.pro { background: #EAF3DE; color: #3B6D11; }
   .upload-area { margin: 20px; border: 1.5px dashed #D1D5DB; border-radius: 16px; padding: 32px 20px; text-align: center; cursor: pointer; background: #F9FAFB; transition: all 0.2s; }
   .upload-area:hover { border-color: #5B4BD4; background: #EEEDFE; }
   .upload-icon { width: 56px; height: 56px; border-radius: 50%; background: #EEEDFE; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
@@ -66,16 +67,36 @@
   .paywall-features { text-align: left; margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
   .paywall-feature { font-size: 13px; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 8px; }
   .paywall-feature::before { content: '✓'; color: #FF6B35; font-weight: 700; }
-  .paywall-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #FF6B35, #ff8c5a); color: #fff; font-size: 16px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; margin-bottom: 10px; }
-  .paywall-btn:hover { background: linear-gradient(135deg, #e55a25, #ff7a45); }
-  .paywall-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .paywall-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #FF6B35, #ff8c5a); color: #fff; font-size: 16px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; margin-bottom: 16px; }
+  .paywall-btn:hover { opacity: 0.9; }
+  .divider { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .divider-line { flex: 1; height: 0.5px; background: rgba(255,255,255,0.2); }
+  .divider-text { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .code-row { display: flex; gap: 8px; }
+  .code-input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 13px; outline: none; }
+  .code-input::placeholder { color: rgba(255,255,255,0.4); }
+  .code-input:focus { border-color: #5B4BD4; }
+  .code-btn { padding: 10px 16px; border-radius: 10px; background: #5B4BD4; color: #fff; font-size: 13px; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; }
+  .code-btn:hover { background: #3C3489; }
+  .paywall-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 12px; }
+  .code-error { font-size: 12px; color: #ff8c8c; margin-top: 8px; }
+
+  /* SUCCESS */
+  .success-banner { margin: 20px; background: #EAF3DE; border: 0.5px solid #3B6D11; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .success-banner span { font-size: 13px; color: #3B6D11; font-weight: 500; }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
     <div class="logo">Snap<span>ID</span></div>
-    <div class="scans-left" id="scansDisplay">3 free scans left</div>
+    <div class="scans-left" id="scansDisplay" onclick="handleScansClick()">3 free scans left</div>
+  </div>
+
+  <div id="proSuccess" class="hidden">
+    <div class="success-banner">
+      <span>✅ SnapID Pro activated — unlimited scans!</span>
+    </div>
   </div>
 
   <div id="uploadSection">
@@ -164,7 +185,17 @@
       <a href="https://snapidapp.gumroad.com/l/uzpmiz" class="paywall-btn" target="_blank">
         Upgrade to Pro — $2.99/mo
       </a>
-      <div class="paywall-sub">7-day free trial · No commitment</div>
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">Already subscribed?</div>
+        <div class="divider-line"></div>
+      </div>
+      <div class="code-row">
+        <input class="code-input" id="codeInput" type="text" placeholder="Enter your access code" />
+        <button class="code-btn" onclick="activateCode()">Activate</button>
+      </div>
+      <div class="code-error hidden" id="codeError">Invalid code. Please try again.</div>
+      <div class="paywall-sub">7-day free trial · No commitment · Cancel anytime</div>
     </div>
   </div>
 
@@ -193,31 +224,59 @@
 let b64=null, mtype=null;
 const BACKEND = 'https://snapid-backend-production-0846.up.railway.app/identify';
 const FREE_LIMIT = 3;
+const PRO_CODES = ['SNAPID-PRO-2025', 'SNAPIDPRO', 'SNAP-UNLIMITED'];
 
+function isPro() { return localStorage.getItem('snapid_pro') === 'true'; }
 function getScansUsed() { return parseInt(localStorage.getItem('snapid_scans') || '0'); }
 function addScan() { localStorage.setItem('snapid_scans', getScansUsed() + 1); }
 function getScansLeft() { return Math.max(0, FREE_LIMIT - getScansUsed()); }
 
 function updateScansDisplay() {
-  const left = getScansLeft();
   const el = document.getElementById('scansDisplay');
+  if (isPro()) {
+    el.textContent = '⭐ Pro — Unlimited';
+    el.className = 'scans-left pro';
+    return;
+  }
+  const left = getScansLeft();
   if (left === 0) {
     el.textContent = 'Upgrade to Pro';
     el.style.background = '#FF6B35';
     el.style.color = '#fff';
     el.style.cursor = 'pointer';
-    el.onclick = () => { show('paywallSection'); hide('uploadSection'); };
   } else {
     el.textContent = left + ' free scan' + (left === 1 ? '' : 's') + ' left';
     el.className = 'scans-left' + (left === 1 ? ' low' : '');
   }
 }
 
+function handleScansClick() {
+  if (!isPro() && getScansLeft() === 0) {
+    show('paywallSection');
+    hide('uploadSection');
+  }
+}
+
+function activateCode() {
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  const errorEl = document.getElementById('codeError');
+  if (PRO_CODES.includes(code)) {
+    localStorage.setItem('snapid_pro', 'true');
+    hide('paywallSection');
+    show('uploadSection');
+    show('proSuccess');
+    updateScansDisplay();
+    setTimeout(() => hide('proSuccess'), 4000);
+  } else {
+    errorEl.classList.remove('hidden');
+    setTimeout(() => errorEl.classList.add('hidden'), 3000);
+  }
+}
+
 function handleFile(file) {
   if (!file) return;
-  if (getScansLeft() === 0) {
-    show('paywallSection'); hide('uploadSection');
-    return;
+  if (!isPro() && getScansLeft() === 0) {
+    show('paywallSection'); hide('uploadSection'); return;
   }
   const r = new FileReader();
   r.onload = (e) => {
@@ -233,9 +292,8 @@ function handleFile(file) {
 
 async function identify() {
   if (!b64) return;
-  if (getScansLeft() === 0) {
-    show('paywallSection'); hide('previewSection');
-    return;
+  if (!isPro() && getScansLeft() === 0) {
+    show('paywallSection'); hide('previewSection'); return;
   }
   hide('previewSection'); show('loadingSection');
   hide('resultSection'); hide('errorSection'); hide('paywallSection');
@@ -247,7 +305,7 @@ async function identify() {
     });
     const result = await res.json();
     if (result.error) { showError('Error: ' + result.error); return; }
-    addScan();
+    if (!isPro()) addScan();
     updateScansDisplay();
     document.getElementById('rName').textContent = result.name || '—';
     document.getElementById('rConf').textContent = result.confidence || '—';
@@ -271,7 +329,7 @@ function shareResult() {
 }
 
 function resetApp() {
-  if (getScansLeft() === 0) {
+  if (!isPro() && getScansLeft() === 0) {
     show('paywallSection');
     hide('uploadSection'); hide('previewSection');
     hide('loadingSection'); hide('resultSection'); hide('errorSection');
@@ -293,6 +351,7 @@ function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
 updateScansDisplay();
+if (isPro()) show('proSuccess');
 </script>
 </body>
 </html>
