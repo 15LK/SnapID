@@ -241,13 +241,20 @@ input[type=file] { display: none; }
           </div>
           <div class="hero-title">Identify Anything</div>
           <div class="hero-sub">Point your camera at any object — AI identifies it instantly with value, origin & more</div>
-          <button class="hero-btn">
-            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Take a Photo
-          </button>
+          <div style="display:flex;gap:10px;justify-content:center;position:relative;">
+            <button class="hero-btn" onclick="event.stopPropagation();document.getElementById('cameraInput').click()">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Camera
+            </button>
+            <button class="hero-btn" style="background:rgba(82,130,255,0.2);border:1px solid rgba(82,130,255,0.4);" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload
+            </button>
+          </div>
         </div>
       </div>
       <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFile(this.files[0])">
 
       <div class="objects-section">
         <div class="objects-label">Works with any object</div>
@@ -386,6 +393,9 @@ input[type=file] { display: none; }
         <div class="saved-title">Saved</div>
         <button class="clear-all" onclick="clearAllSaved()">Clear all</button>
       </div>
+      <div style="margin-bottom:12px;">
+        <input type="text" id="savedSearch" placeholder="🔍 Search saved..." oninput="renderSaved()" style="width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:13px;outline:none;font-family:'Space Grotesk',sans-serif;">
+      </div>
       <div id="savedList"></div>
     </div>
   </div>
@@ -451,8 +461,11 @@ function saveResult(){
 }
 
 function renderSaved(){
-  const saved=getSaved();const list=document.getElementById('savedList');
-  if(!saved.length){list.innerHTML='<div class="saved-empty"><div class="saved-empty-icon">🔍</div><p>No saved identifications yet.<br>Identify something and tap Save!</p></div>';return;}
+  const query=(document.getElementById('savedSearch')?.value||'').toLowerCase();
+  let saved=getSaved();
+  if(query)saved=saved.filter(i=>i.name.toLowerCase().includes(query)||i.category.toLowerCase().includes(query));
+  const list=document.getElementById('savedList');
+  if(!saved.length){list.innerHTML='<div class="saved-empty"><div class="saved-empty-icon">🔍</div><p>'+(query?'No results for "'+query+'"':'No saved identifications yet.<br>Identify something and tap Save!')+'</p></div>';return;}
   list.innerHTML=saved.map(i=>`<div class="saved-item"><img class="simg" src="${i.img}" alt="${i.name}"><div class="sinfo"><div class="sname">${i.name}</div><div class="scat">${i.category}</div><div class="sval">${i.value}</div><div class="sdate">${i.date}</div></div><button class="sdel" onclick="deleteSaved(${i.id})">✕</button></div>`).join('');
 }
 
@@ -504,10 +517,74 @@ async function identify(){
 }
 
 function shareResult(){
-  const name=document.getElementById('rName').textContent;const val=document.getElementById('rVal').textContent;
-  const text='AI identified this as: '+name+' (Est. value: '+val+') — via SnapID';
-  if(navigator.share){navigator.share({title:'SnapID Result',text});}
-  else{navigator.clipboard.writeText(text).then(()=>alert('Copied!'));}
+  const name=document.getElementById('rName').textContent;
+  const val=document.getElementById('rVal').textContent;
+  const cat=document.getElementById('rCat').textContent;
+  const rarity=document.getElementById('rRarity').textContent;
+  const desc=document.getElementById('rDesc').textContent;
+
+  // Try to share as image using canvas
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800; canvas.height = 500;
+    const ctx = canvas.getContext('2d');
+    // Background
+    ctx.fillStyle = '#0d0d24';
+    ctx.fillRect(0,0,800,500);
+    // Accent bar
+    const grad = ctx.createLinearGradient(0,0,800,0);
+    grad.addColorStop(0,'#5282FF'); grad.addColorStop(1,'#8B85FF');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,800,6);
+    // Name
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px sans-serif';
+    ctx.fillText(name.length>35?name.substring(0,35)+'...':name, 40, 80);
+    // Category
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '18px sans-serif';
+    ctx.fillText(cat, 40, 115);
+    // Value
+    ctx.fillStyle = '#00D68F'; ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(val, 40, 200);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '14px sans-serif';
+    ctx.fillText('EST. VALUE', 40, 172);
+    // Rarity
+    ctx.fillStyle = '#FFB830'; ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(rarity, 300, 200);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '14px sans-serif';
+    ctx.fillText('RARITY', 300, 172);
+    // Desc
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '15px sans-serif';
+    const words = desc.split(' '); let line = ''; let y = 300;
+    for(let w of words){
+      const test = line + w + ' ';
+      if(ctx.measureText(test).width > 720 && line !== ''){
+        ctx.fillText(line, 40, y); line = w + ' '; y += 22;
+        if(y > 420) break;
+      } else { line = test; }
+    }
+    ctx.fillText(line, 40, y);
+    // SnapID brand
+    ctx.fillStyle = '#5282FF'; ctx.font = 'bold 16px sans-serif';
+    ctx.fillText('SnapID', 40, 470);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '14px sans-serif';
+    ctx.fillText('snap-id-five.vercel.app', 110, 470);
+
+    canvas.toBlob(blob => {
+      if(blob && navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'snapid.png',{type:'image/png'})]})){
+        navigator.share({title:'SnapID — '+name, files:[new File([blob],'snapid.png',{type:'image/png'})]});
+      } else {
+        // Fallback — download image
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'snapid-'+name.replace(/\s+/g,'-')+'.png';
+        a.click();
+      }
+    });
+  } catch(e) {
+    // Final fallback — text share
+    const text='AI identified: '+name+' | Value: '+val+' | '+rarity+' — via SnapID snap-id-five.vercel.app';
+    if(navigator.share){navigator.share({title:'SnapID Result',text});}
+    else{navigator.clipboard.writeText(text).then(()=>alert('Copied!'));}
+  }
 }
 
 function resetApp(){
