@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <link rel="manifest" href="/manifest.json">
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SnapID — Identify Anything Instantly</title>
+<link rel="manifest" href="/manifest.json">
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F9FAFB; color: #111827; min-height: 100vh; }
@@ -49,17 +49,35 @@
   .result-desc-text { font-size: 13px; color: #374151; line-height: 1.6; }
   .share-row { display: flex; gap: 8px; }
   .share-btn { flex: 1; padding: 10px; border-radius: 10px; border: 0.5px solid #E5E7EB; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .save-btn { flex: 1; padding: 10px; border-radius: 10px; border: 0.5px solid #5B4BD4; background: #EEEDFE; color: #3C3489; font-size: 13px; font-weight: 500; cursor: pointer; }
   .new-btn { flex: 1; padding: 10px; border-radius: 10px; background: #5B4BD4; color: #fff; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
   .error-box { margin: 0 20px; padding: 14px; background: #FCEBEB; border: 0.5px solid #F09595; border-radius: 10px; font-size: 13px; color: #A32D2D; line-height: 1.5; }
   .examples { padding: 0 20px 20px; }
   .examples-label { font-size: 12px; color: #6B7280; margin-bottom: 10px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { font-size: 12px; padding: 5px 12px; border-radius: 100px; border: 0.5px solid #E5E7EB; background: #fff; color: #374151; }
-  .bottom-nav { margin-top: auto; border-top: 0.5px solid #E5E7EB; display: flex; padding: 8px 0 16px; }
-  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #9CA3AF; padding: 4px 0; }
+
+  /* SAVED TAB */
+  .saved-section { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .saved-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+  .saved-empty { text-align: center; padding: 40px 20px; color: #6B7280; }
+  .saved-empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .saved-empty p { font-size: 14px; line-height: 1.6; }
+  .saved-item { background: #F9FAFB; border: 0.5px solid #E5E7EB; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+  .saved-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+  .saved-info { flex: 1; }
+  .saved-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .saved-meta { font-size: 12px; color: #6B7280; margin-bottom: 4px; }
+  .saved-val { font-size: 12px; color: #3B6D11; font-weight: 500; }
+  .saved-delete { background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 16px; padding: 4px; }
+  .saved-delete:hover { color: #EF4444; }
+  .saved-date { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { border-top: 0.5px solid #E5E7EB; display: flex; padding: 8px 0 16px; background: #fff; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #9CA3AF; cursor: pointer; padding: 4px 0; border: none; background: none; }
   .nav-item.active { color: #5B4BD4; }
   .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-  .hidden { display: none; }
 
   /* PAYWALL */
   .paywall { margin: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 32px 24px; text-align: center; color: #fff; }
@@ -70,22 +88,18 @@
   .paywall-feature { font-size: 13px; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 8px; }
   .paywall-feature::before { content: '✓'; color: #FF6B35; font-weight: 700; }
   .paywall-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #FF6B35, #ff8c5a); color: #fff; font-size: 16px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; margin-bottom: 16px; }
-  .paywall-btn:hover { opacity: 0.9; }
   .divider { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .divider-line { flex: 1; height: 0.5px; background: rgba(255,255,255,0.2); }
   .divider-text { font-size: 12px; color: rgba(255,255,255,0.4); }
   .code-row { display: flex; gap: 8px; }
   .code-input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 13px; outline: none; }
   .code-input::placeholder { color: rgba(255,255,255,0.4); }
-  .code-input:focus { border-color: #5B4BD4; }
   .code-btn { padding: 10px 16px; border-radius: 10px; background: #5B4BD4; color: #fff; font-size: 13px; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; }
-  .code-btn:hover { background: #3C3489; }
-  .paywall-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 12px; }
   .code-error { font-size: 12px; color: #ff8c8c; margin-top: 8px; }
-
-  /* SUCCESS */
+  .paywall-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 12px; }
   .success-banner { margin: 20px; background: #EAF3DE; border: 0.5px solid #3B6D11; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
   .success-banner span { font-size: 13px; color: #3B6D11; font-weight: 500; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
@@ -101,129 +115,141 @@
     </div>
   </div>
 
-  <div id="uploadSection">
-    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-      <div class="upload-icon">
-        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  <!-- HOME TAB -->
+  <div id="homeTab">
+    <div id="uploadSection">
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div class="upload-title">Take or upload a photo</div>
+        <div class="upload-sub">Coins · Antiques · Plants · Jewelry · Art · Anything</div>
+        <button class="upload-btn">Choose Photo</button>
       </div>
-      <div class="upload-title">Take or upload a photo</div>
-      <div class="upload-sub">Coins · Antiques · Plants · Jewelry · Art · Anything</div>
-      <button class="upload-btn">Choose Photo</button>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+      <div class="examples">
+        <div class="examples-label">Works with any object:</div>
+        <div class="chips">
+          <div class="chip">🪙 Coins</div>
+          <div class="chip">🏺 Antiques</div>
+          <div class="chip">🌿 Plants</div>
+          <div class="chip">💎 Jewelry</div>
+          <div class="chip">🎨 Art</div>
+          <div class="chip">🍄 Mushrooms</div>
+          <div class="chip">🦋 Insects</div>
+          <div class="chip">🪨 Rocks</div>
+        </div>
+      </div>
     </div>
-    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
-    <div class="examples">
-      <div class="examples-label">Works with any object:</div>
-      <div class="chips">
-        <div class="chip">🪙 Coins</div>
-        <div class="chip">🏺 Antiques</div>
-        <div class="chip">🌿 Plants</div>
-        <div class="chip">💎 Jewelry</div>
-        <div class="chip">🎨 Art</div>
-        <div class="chip">🍄 Mushrooms</div>
-        <div class="chip">🦋 Insects</div>
-        <div class="chip">🪨 Rocks</div>
+
+    <div id="previewSection" class="hidden">
+      <div class="preview-wrap">
+        <img id="previewImg" class="preview-img" src="" alt="Preview">
+        <button class="clear-btn" onclick="resetApp()">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
+      <div class="scan-wrap">
+        <button class="scan-btn" onclick="identify()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Identify Now
+        </button>
+      </div>
+    </div>
+
+    <div id="loadingSection" class="hidden">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing with Claude AI...</div>
+      </div>
+    </div>
+
+    <div id="resultSection" class="hidden">
+      <div class="result">
+        <div class="result-header">
+          <div class="result-name" id="rName">—</div>
+          <div class="conf-badge" id="rConf">—</div>
+        </div>
+        <div class="result-grid">
+          <div class="result-item"><div class="result-label">Category</div><div class="result-val" id="rCat">—</div></div>
+          <div class="result-item"><div class="result-label">Est. Value</div><div class="result-val" id="rVal">—</div></div>
+          <div class="result-item"><div class="result-label">Origin / Period</div><div class="result-val" id="rOrigin">—</div></div>
+          <div class="result-item"><div class="result-label">Rarity</div><div class="result-val" id="rRarity">—</div></div>
+        </div>
+        <div class="result-desc">
+          <div class="result-desc-label">Description</div>
+          <div class="result-desc-text" id="rDesc">—</div>
+        </div>
+        <div class="share-row">
+          <button class="share-btn" onclick="shareResult()">📤 Share</button>
+          <button class="save-btn" onclick="saveResult()">🔖 Save</button>
+          <button class="new-btn" onclick="resetApp()">+ New</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="paywallSection" class="hidden">
+      <div class="paywall">
+        <div class="paywall-icon">🔒</div>
+        <h2>You've used your free scans!</h2>
+        <p>Upgrade to SnapID Pro for unlimited AI identifications — any object, anytime.</p>
+        <div class="paywall-features">
+          <div class="paywall-feature">Unlimited scans every day</div>
+          <div class="paywall-feature">Instant AI identification</div>
+          <div class="paywall-feature">Estimated value & rarity</div>
+          <div class="paywall-feature">Save to your collection</div>
+          <div class="paywall-feature">Cancel anytime</div>
+        </div>
+        <a href="https://snapidapp.gumroad.com/l/uzpmiz" class="paywall-btn" target="_blank">
+          Upgrade to Pro — $2.99/mo
+        </a>
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">Already subscribed?</div>
+          <div class="divider-line"></div>
+        </div>
+        <div class="code-row">
+          <input class="code-input" id="codeInput" type="text" placeholder="Enter your access code" />
+          <button class="code-btn" onclick="activateCode()">Activate</button>
+        </div>
+        <div class="code-error hidden" id="codeError">Invalid code. Please try again.</div>
+        <div class="paywall-sub">7-day free trial · No commitment · Cancel anytime</div>
+      </div>
+    </div>
+
+    <div id="errorSection" class="hidden">
+      <div class="error-box" id="errorMsg"></div>
+      <div class="scan-wrap"><button class="scan-btn" onclick="resetApp()">Try Again</button></div>
     </div>
   </div>
 
-  <div id="previewSection" class="hidden">
-    <div class="preview-wrap">
-      <img id="previewImg" class="preview-img" src="" alt="Preview">
-      <button class="clear-btn" onclick="resetApp()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="scan-wrap">
-      <button class="scan-btn" onclick="identify()">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Identify Now
-      </button>
+  <!-- SAVED TAB -->
+  <div id="savedTab" class="hidden">
+    <div class="saved-section">
+      <div class="saved-title">⭐ Saved Identifications</div>
+      <div id="savedList"></div>
     </div>
   </div>
 
-  <div id="loadingSection" class="hidden">
-    <div class="loading">
-      <div class="spinner"></div>
-      <div class="loading-text">Analyzing with Claude AI...</div>
-    </div>
-  </div>
-
-  <div id="resultSection" class="hidden">
-    <div class="result">
-      <div class="result-header">
-        <div class="result-name" id="rName">—</div>
-        <div class="conf-badge" id="rConf">—</div>
-      </div>
-      <div class="result-grid">
-        <div class="result-item"><div class="result-label">Category</div><div class="result-val" id="rCat">—</div></div>
-        <div class="result-item"><div class="result-label">Est. Value</div><div class="result-val" id="rVal">—</div></div>
-        <div class="result-item"><div class="result-label">Origin / Period</div><div class="result-val" id="rOrigin">—</div></div>
-        <div class="result-item"><div class="result-label">Rarity</div><div class="result-val" id="rRarity">—</div></div>
-      </div>
-      <div class="result-desc">
-        <div class="result-desc-label">Description</div>
-        <div class="result-desc-text" id="rDesc">—</div>
-      </div>
-      <div class="share-row">
-        <button class="share-btn" onclick="shareResult()">📤 Share</button>
-        <button class="new-btn" onclick="resetApp()">+ New Scan</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAYWALL -->
-  <div id="paywallSection" class="hidden">
-    <div class="paywall">
-      <div class="paywall-icon">🔒</div>
-      <h2>You've used your free scans!</h2>
-      <p>Upgrade to SnapID Pro for unlimited AI identifications — any object, anytime.</p>
-      <div class="paywall-features">
-        <div class="paywall-feature">Unlimited scans every day</div>
-        <div class="paywall-feature">Instant AI identification</div>
-        <div class="paywall-feature">Estimated value & rarity</div>
-        <div class="paywall-feature">Detailed history & origin</div>
-        <div class="paywall-feature">Cancel anytime</div>
-      </div>
-      <a href="https://snapidapp.gumroad.com/l/uzpmiz" class="paywall-btn" target="_blank">
-        Upgrade to Pro — $2.99/mo
-      </a>
-      <div class="divider">
-        <div class="divider-line"></div>
-        <div class="divider-text">Already subscribed?</div>
-        <div class="divider-line"></div>
-      </div>
-      <div class="code-row">
-        <input class="code-input" id="codeInput" type="text" placeholder="Enter your access code" />
-        <button class="code-btn" onclick="activateCode()">Activate</button>
-      </div>
-      <div class="code-error hidden" id="codeError">Invalid code. Please try again.</div>
-      <div class="paywall-sub">7-day free trial · No commitment · Cancel anytime</div>
-    </div>
-  </div>
-
-  <div id="errorSection" class="hidden">
-    <div class="error-box" id="errorMsg"></div>
-    <div class="scan-wrap"><button class="scan-btn" onclick="resetApp()">Try Again</button></div>
-  </div>
-
+  <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <div class="nav-item active">
+    <button class="nav-item active" id="navHome" onclick="switchTab('home')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
-    </div>
-    <div class="nav-item">
+    </button>
+    <button class="nav-item" id="navScan" onclick="switchTab('scan')">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Scan
-    </div>
-    <div class="nav-item">
+    </button>
+    <button class="nav-item" id="navSaved" onclick="switchTab('saved')">
       <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       Saved
-    </div>
+    </button>
   </div>
 </div>
 
 <script>
-let b64=null, mtype=null;
+let b64=null, mtype=null, currentResult=null, currentImgSrc=null;
 const BACKEND = 'https://snapid-backend-production-0846.up.railway.app/identify';
 const FREE_LIMIT = 3;
 const PRO_CODES = ['SNAPID-PRO-2025', 'SNAPIDPRO', 'SNAP-UNLIMITED'];
@@ -235,28 +261,85 @@ function getScansLeft() { return Math.max(0, FREE_LIMIT - getScansUsed()); }
 
 function updateScansDisplay() {
   const el = document.getElementById('scansDisplay');
-  if (isPro()) {
-    el.textContent = '⭐ Pro — Unlimited';
-    el.className = 'scans-left pro';
-    return;
-  }
+  if (isPro()) { el.textContent = '⭐ Pro — Unlimited'; el.className = 'scans-left pro'; return; }
   const left = getScansLeft();
-  if (left === 0) {
-    el.textContent = 'Upgrade to Pro';
-    el.style.background = '#FF6B35';
-    el.style.color = '#fff';
-    el.style.cursor = 'pointer';
-  } else {
-    el.textContent = left + ' free scan' + (left === 1 ? '' : 's') + ' left';
-    el.className = 'scans-left' + (left === 1 ? ' low' : '');
-  }
+  if (left === 0) { el.textContent = 'Upgrade to Pro'; el.style.background = '#FF6B35'; el.style.color = '#fff'; }
+  else { el.textContent = left + ' free scan' + (left===1?'':'s') + ' left'; el.className = 'scans-left' + (left===1?' low':''); }
 }
 
 function handleScansClick() {
-  if (!isPro() && getScansLeft() === 0) {
-    show('paywallSection');
-    hide('uploadSection');
+  if (!isPro() && getScansLeft() === 0) { show('paywallSection'); hide('uploadSection'); }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  if (tab === 'home') {
+    show('homeTab'); hide('savedTab');
+    document.getElementById('navHome').classList.add('active');
+  } else if (tab === 'scan') {
+    show('homeTab'); hide('savedTab');
+    document.getElementById('navScan').classList.add('active');
+    resetApp();
+    setTimeout(() => document.getElementById('fileInput').click(), 100);
+  } else if (tab === 'saved') {
+    hide('homeTab'); show('savedTab');
+    document.getElementById('navSaved').classList.add('active');
+    renderSaved();
   }
+}
+
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem('snapid_saved') || '[]'); } catch { return []; }
+}
+
+function saveResult() {
+  if (!currentResult) return;
+  const saved = getSaved();
+  const item = {
+    id: Date.now(),
+    img: currentImgSrc,
+    name: currentResult.name,
+    category: currentResult.category,
+    value: currentResult.estimated_value,
+    rarity: currentResult.rarity,
+    desc: currentResult.description,
+    date: new Date().toLocaleDateString()
+  };
+  saved.unshift(item);
+  if (saved.length > 20) saved.pop();
+  localStorage.setItem('snapid_saved', JSON.stringify(saved));
+  const btn = document.querySelector('.save-btn');
+  btn.textContent = '✅ Saved!';
+  btn.style.background = '#EAF3DE';
+  btn.style.color = '#3B6D11';
+  setTimeout(() => { btn.textContent = '🔖 Save'; btn.style.background = '#EEEDFE'; btn.style.color = '#3C3489'; }, 2000);
+}
+
+function renderSaved() {
+  const saved = getSaved();
+  const list = document.getElementById('savedList');
+  if (saved.length === 0) {
+    list.innerHTML = '<div class="saved-empty"><div class="saved-empty-icon">🔍</div><p>No saved identifications yet.<br>Identify an object and tap Save!</p></div>';
+    return;
+  }
+  list.innerHTML = saved.map(item => `
+    <div class="saved-item">
+      <img class="saved-img" src="${item.img}" alt="${item.name}">
+      <div class="saved-info">
+        <div class="saved-name">${item.name}</div>
+        <div class="saved-meta">${item.category}</div>
+        <div class="saved-val">${item.value}</div>
+        <div class="saved-date">${item.date}</div>
+      </div>
+      <button class="saved-delete" onclick="deleteSaved(${item.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function deleteSaved(id) {
+  const saved = getSaved().filter(i => i.id !== id);
+  localStorage.setItem('snapid_saved', JSON.stringify(saved));
+  renderSaved();
 }
 
 function activateCode() {
@@ -264,9 +347,7 @@ function activateCode() {
   const errorEl = document.getElementById('codeError');
   if (PRO_CODES.includes(code)) {
     localStorage.setItem('snapid_pro', 'true');
-    hide('paywallSection');
-    show('uploadSection');
-    show('proSuccess');
+    hide('paywallSection'); show('uploadSection'); show('proSuccess');
     updateScansDisplay();
     setTimeout(() => hide('proSuccess'), 4000);
   } else {
@@ -277,14 +358,13 @@ function activateCode() {
 
 function handleFile(file) {
   if (!file) return;
-  if (!isPro() && getScansLeft() === 0) {
-    show('paywallSection'); hide('uploadSection'); return;
-  }
+  if (!isPro() && getScansLeft() === 0) { show('paywallSection'); hide('uploadSection'); return; }
   const r = new FileReader();
   r.onload = (e) => {
     const d = e.target.result;
     mtype = file.type || 'image/jpeg';
     b64 = d.split(',')[1];
+    currentImgSrc = d;
     document.getElementById('previewImg').src = d;
     show('previewSection'); hide('uploadSection');
     hide('resultSection'); hide('errorSection'); hide('loadingSection'); hide('paywallSection');
@@ -294,9 +374,7 @@ function handleFile(file) {
 
 async function identify() {
   if (!b64) return;
-  if (!isPro() && getScansLeft() === 0) {
-    show('paywallSection'); hide('previewSection'); return;
-  }
+  if (!isPro() && getScansLeft() === 0) { show('paywallSection'); hide('previewSection'); return; }
   hide('previewSection'); show('loadingSection');
   hide('resultSection'); hide('errorSection'); hide('paywallSection');
   try {
@@ -309,6 +387,7 @@ async function identify() {
     if (result.error) { showError('Error: ' + result.error); return; }
     if (!isPro()) addScan();
     updateScansDisplay();
+    currentResult = result;
     document.getElementById('rName').textContent = result.name || '—';
     document.getElementById('rConf').textContent = result.confidence || '—';
     document.getElementById('rCat').textContent = result.category || '—';
@@ -317,9 +396,7 @@ async function identify() {
     document.getElementById('rRarity').textContent = result.rarity || '—';
     document.getElementById('rDesc').textContent = result.description || '—';
     hide('loadingSection'); show('resultSection');
-  } catch(err) {
-    showError('Something went wrong. Please try again.\n\n' + err.message);
-  }
+  } catch(err) { showError('Something went wrong. Please try again.\n\n' + err.message); }
 }
 
 function shareResult() {
@@ -331,29 +408,19 @@ function shareResult() {
 }
 
 function resetApp() {
-  if (!isPro() && getScansLeft() === 0) {
-    show('paywallSection');
-    hide('uploadSection'); hide('previewSection');
-    hide('loadingSection'); hide('resultSection'); hide('errorSection');
-    return;
-  }
-  b64 = null; mtype = null;
+  if (!isPro() && getScansLeft() === 0) { show('paywallSection'); hide('uploadSection'); hide('previewSection'); hide('loadingSection'); hide('resultSection'); hide('errorSection'); return; }
+  b64 = null; mtype = null; currentResult = null;
   document.getElementById('fileInput').value = '';
   show('uploadSection'); hide('previewSection');
   hide('loadingSection'); hide('resultSection'); hide('errorSection'); hide('paywallSection');
 }
 
-function showError(msg) {
-  hide('loadingSection'); hide('previewSection');
-  document.getElementById('errorMsg').textContent = msg;
-  show('errorSection');
-}
-
+function showError(msg) { hide('loadingSection'); hide('previewSection'); document.getElementById('errorMsg').textContent = msg; show('errorSection'); }
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
 updateScansDisplay();
-if (isPro()) show('proSuccess');
+if (isPro()) { show('proSuccess'); setTimeout(() => hide('proSuccess'), 3000); }
 </script>
 </body>
 </html>
