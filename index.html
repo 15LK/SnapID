@@ -11,7 +11,8 @@
   .header { padding: 16px 20px 12px; border-bottom: 0.5px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; }
   .logo { font-size: 20px; font-weight: 600; color: #111827; }
   .logo span { color: #5B4BD4; }
-  .pro-badge { font-size: 11px; padding: 3px 8px; border-radius: 100px; background: #EEEDFE; color: #3C3489; font-weight: 500; }
+  .scans-left { font-size: 12px; padding: 4px 10px; border-radius: 100px; background: #EEEDFE; color: #3C3489; font-weight: 500; }
+  .scans-left.low { background: #FAEEDA; color: #633806; }
   .upload-area { margin: 20px; border: 1.5px dashed #D1D5DB; border-radius: 16px; padding: 32px 20px; text-align: center; cursor: pointer; background: #F9FAFB; transition: all 0.2s; }
   .upload-area:hover { border-color: #5B4BD4; background: #EEEDFE; }
   .upload-icon { width: 56px; height: 56px; border-radius: 50%; background: #EEEDFE; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
@@ -46,23 +47,35 @@
   .share-row { display: flex; gap: 8px; }
   .share-btn { flex: 1; padding: 10px; border-radius: 10px; border: 0.5px solid #E5E7EB; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; }
   .new-btn { flex: 1; padding: 10px; border-radius: 10px; background: #5B4BD4; color: #fff; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
-  .error-box { margin: 0 20px; padding: 14px; background: #FCEBEB; border: 0.5px solid #F09595; border-radius: 10px; font-size: 13px; color: #A32D2D; line-height: 1.5; white-space: pre-wrap; }
+  .error-box { margin: 0 20px; padding: 14px; background: #FCEBEB; border: 0.5px solid #F09595; border-radius: 10px; font-size: 13px; color: #A32D2D; line-height: 1.5; }
   .examples { padding: 0 20px 20px; }
   .examples-label { font-size: 12px; color: #6B7280; margin-bottom: 10px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { font-size: 12px; padding: 5px 12px; border-radius: 100px; border: 0.5px solid #E5E7EB; background: #fff; color: #374151; }
   .bottom-nav { margin-top: auto; border-top: 0.5px solid #E5E7EB; display: flex; padding: 8px 0 16px; }
-  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #9CA3AF; cursor: pointer; padding: 4px 0; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #9CA3AF; padding: 4px 0; }
   .nav-item.active { color: #5B4BD4; }
   .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
   .hidden { display: none; }
+
+  /* PAYWALL */
+  .paywall { margin: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 32px 24px; text-align: center; color: #fff; }
+  .paywall-icon { font-size: 48px; margin-bottom: 16px; }
+  .paywall h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .paywall p { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 24px; line-height: 1.6; }
+  .paywall-features { text-align: left; margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
+  .paywall-feature { font-size: 13px; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 8px; }
+  .paywall-feature::before { content: '✓'; color: #FF6B35; font-weight: 700; }
+  .paywall-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #FF6B35, #ff8c5a); color: #fff; font-size: 16px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; margin-bottom: 10px; }
+  .paywall-btn:hover { background: linear-gradient(135deg, #e55a25, #ff7a45); }
+  .paywall-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
     <div class="logo">Snap<span>ID</span></div>
-    <div class="pro-badge">✦ AI Powered</div>
+    <div class="scans-left" id="scansDisplay">3 free scans left</div>
   </div>
 
   <div id="uploadSection">
@@ -135,6 +148,26 @@
     </div>
   </div>
 
+  <!-- PAYWALL -->
+  <div id="paywallSection" class="hidden">
+    <div class="paywall">
+      <div class="paywall-icon">🔒</div>
+      <h2>You've used your free scans!</h2>
+      <p>Upgrade to SnapID Pro for unlimited AI identifications — any object, anytime.</p>
+      <div class="paywall-features">
+        <div class="paywall-feature">Unlimited scans every day</div>
+        <div class="paywall-feature">Instant AI identification</div>
+        <div class="paywall-feature">Estimated value & rarity</div>
+        <div class="paywall-feature">Detailed history & origin</div>
+        <div class="paywall-feature">Cancel anytime</div>
+      </div>
+      <a href="https://snapidapp.gumroad.com/l/uzpmiz" class="paywall-btn" target="_blank">
+        Upgrade to Pro — $2.99/mo
+      </a>
+      <div class="paywall-sub">7-day free trial · No commitment</div>
+    </div>
+  </div>
+
   <div id="errorSection" class="hidden">
     <div class="error-box" id="errorMsg"></div>
     <div class="scan-wrap"><button class="scan-btn" onclick="resetApp()">Try Again</button></div>
@@ -159,9 +192,33 @@
 <script>
 let b64=null, mtype=null;
 const BACKEND = 'https://snapid-backend-production-0846.up.railway.app/identify';
+const FREE_LIMIT = 3;
+
+function getScansUsed() { return parseInt(localStorage.getItem('snapid_scans') || '0'); }
+function addScan() { localStorage.setItem('snapid_scans', getScansUsed() + 1); }
+function getScansLeft() { return Math.max(0, FREE_LIMIT - getScansUsed()); }
+
+function updateScansDisplay() {
+  const left = getScansLeft();
+  const el = document.getElementById('scansDisplay');
+  if (left === 0) {
+    el.textContent = 'Upgrade to Pro';
+    el.style.background = '#FF6B35';
+    el.style.color = '#fff';
+    el.style.cursor = 'pointer';
+    el.onclick = () => { show('paywallSection'); hide('uploadSection'); };
+  } else {
+    el.textContent = left + ' free scan' + (left === 1 ? '' : 's') + ' left';
+    el.className = 'scans-left' + (left === 1 ? ' low' : '');
+  }
+}
 
 function handleFile(file) {
   if (!file) return;
+  if (getScansLeft() === 0) {
+    show('paywallSection'); hide('uploadSection');
+    return;
+  }
   const r = new FileReader();
   r.onload = (e) => {
     const d = e.target.result;
@@ -169,15 +226,19 @@ function handleFile(file) {
     b64 = d.split(',')[1];
     document.getElementById('previewImg').src = d;
     show('previewSection'); hide('uploadSection');
-    hide('resultSection'); hide('errorSection'); hide('loadingSection');
+    hide('resultSection'); hide('errorSection'); hide('loadingSection'); hide('paywallSection');
   };
   r.readAsDataURL(file);
 }
 
 async function identify() {
   if (!b64) return;
+  if (getScansLeft() === 0) {
+    show('paywallSection'); hide('previewSection');
+    return;
+  }
   hide('previewSection'); show('loadingSection');
-  hide('resultSection'); hide('errorSection');
+  hide('resultSection'); hide('errorSection'); hide('paywallSection');
   try {
     const res = await fetch(BACKEND, {
       method: 'POST',
@@ -186,6 +247,8 @@ async function identify() {
     });
     const result = await res.json();
     if (result.error) { showError('Error: ' + result.error); return; }
+    addScan();
+    updateScansDisplay();
     document.getElementById('rName').textContent = result.name || '—';
     document.getElementById('rConf').textContent = result.confidence || '—';
     document.getElementById('rCat').textContent = result.category || '—';
@@ -208,10 +271,16 @@ function shareResult() {
 }
 
 function resetApp() {
+  if (getScansLeft() === 0) {
+    show('paywallSection');
+    hide('uploadSection'); hide('previewSection');
+    hide('loadingSection'); hide('resultSection'); hide('errorSection');
+    return;
+  }
   b64 = null; mtype = null;
   document.getElementById('fileInput').value = '';
   show('uploadSection'); hide('previewSection');
-  hide('loadingSection'); hide('resultSection'); hide('errorSection');
+  hide('loadingSection'); hide('resultSection'); hide('errorSection'); hide('paywallSection');
 }
 
 function showError(msg) {
@@ -222,6 +291,8 @@ function showError(msg) {
 
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+updateScansDisplay();
 </script>
 </body>
 </html>
