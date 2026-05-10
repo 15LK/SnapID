@@ -12,11 +12,6 @@
   .logo { font-size: 20px; font-weight: 600; color: #111827; }
   .logo span { color: #5B4BD4; }
   .pro-badge { font-size: 11px; padding: 3px 8px; border-radius: 100px; background: #EEEDFE; color: #3C3489; font-weight: 500; }
-  .api-section { padding: 12px 20px; background: #EEEDFE; border-bottom: 0.5px solid #AFA9EC; }
-  .api-label { font-size: 11px; color: #3C3489; margin-bottom: 6px; font-weight: 500; }
-  .api-row { display: flex; gap: 8px; }
-  .api-input { flex: 1; border: 0.5px solid #AFA9EC; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-family: monospace; background: #fff; color: #111827; outline: none; }
-  .api-save { font-size: 12px; padding: 7px 14px; border-radius: 8px; background: #5B4BD4; color: #fff; border: none; cursor: pointer; }
   .upload-area { margin: 20px; border: 1.5px dashed #D1D5DB; border-radius: 16px; padding: 32px 20px; text-align: center; cursor: pointer; background: #F9FAFB; transition: all 0.2s; }
   .upload-area:hover { border-color: #5B4BD4; background: #EEEDFE; }
   .upload-icon { width: 56px; height: 56px; border-radius: 50%; background: #EEEDFE; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
@@ -55,13 +50,181 @@
   .examples { padding: 0 20px 20px; }
   .examples-label { font-size: 12px; color: #6B7280; margin-bottom: 10px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; padding: 5px 12px; border-radius: 100px; border: 0.5px solid #E5E7EB; background: #fff; color: #374151; cursor: pointer; }
+  .chip { font-size: 12px; padding: 5px 12px; border-radius: 100px; border: 0.5px solid #E5E7EB; background: #fff; color: #374151; }
   .bottom-nav { margin-top: auto; border-top: 0.5px solid #E5E7EB; display: flex; padding: 8px 0 16px; }
   .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #9CA3AF; cursor: pointer; padding: 4px 0; }
   .nav-item.active { color: #5B4BD4; }
   .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
   .hidden { display: none; }
 </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">Snap<span>ID</span></div>
+    <div class="pro-badge">✦ AI Powered</div>
+  </div>
+
+  <div id="uploadSection">
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <div class="upload-title">Take or upload a photo</div>
+      <div class="upload-sub">Coins · Antiques · Plants · Jewelry · Art · Anything</div>
+      <button class="upload-btn">Choose Photo</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+    <div class="examples">
+      <div class="examples-label">Works with any object:</div>
+      <div class="chips">
+        <div class="chip">🪙 Coins</div>
+        <div class="chip">🏺 Antiques</div>
+        <div class="chip">🌿 Plants</div>
+        <div class="chip">💎 Jewelry</div>
+        <div class="chip">🎨 Art</div>
+        <div class="chip">🍄 Mushrooms</div>
+        <div class="chip">🦋 Insects</div>
+        <div class="chip">🪨 Rocks</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="previewSection" class="hidden">
+    <div class="preview-wrap">
+      <img id="previewImg" class="preview-img" src="" alt="Preview">
+      <button class="clear-btn" onclick="resetApp()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="scan-wrap">
+      <button class="scan-btn" onclick="identify()">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Identify Now
+      </button>
+    </div>
+  </div>
+
+  <div id="loadingSection" class="hidden">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Analyzing with Claude AI...</div>
+    </div>
+  </div>
+
+  <div id="resultSection" class="hidden">
+    <div class="result">
+      <div class="result-header">
+        <div class="result-name" id="rName">—</div>
+        <div class="conf-badge" id="rConf">—</div>
+      </div>
+      <div class="result-grid">
+        <div class="result-item"><div class="result-label">Category</div><div class="result-val" id="rCat">—</div></div>
+        <div class="result-item"><div class="result-label">Est. Value</div><div class="result-val" id="rVal">—</div></div>
+        <div class="result-item"><div class="result-label">Origin / Period</div><div class="result-val" id="rOrigin">—</div></div>
+        <div class="result-item"><div class="result-label">Rarity</div><div class="result-val" id="rRarity">—</div></div>
+      </div>
+      <div class="result-desc">
+        <div class="result-desc-label">Description</div>
+        <div class="result-desc-text" id="rDesc">—</div>
+      </div>
+      <div class="share-row">
+        <button class="share-btn" onclick="shareResult()">📤 Share</button>
+        <button class="new-btn" onclick="resetApp()">+ New Scan</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="errorSection" class="hidden">
+    <div class="error-box" id="errorMsg"></div>
+    <div class="scan-wrap"><button class="scan-btn" onclick="resetApp()">Try Again</button></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Scan
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Saved
+    </div>
+  </div>
+</div>
+
+<script>
+let b64=null, mtype=null;
+const BACKEND = 'https://snapid-backend-production-0846.up.railway.app/identify';
+
+function handleFile(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = (e) => {
+    const d = e.target.result;
+    mtype = file.type || 'image/jpeg';
+    b64 = d.split(',')[1];
+    document.getElementById('previewImg').src = d;
+    show('previewSection'); hide('uploadSection');
+    hide('resultSection'); hide('errorSection'); hide('loadingSection');
+  };
+  r.readAsDataURL(file);
+}
+
+async function identify() {
+  if (!b64) return;
+  hide('previewSection'); show('loadingSection');
+  hide('resultSection'); hide('errorSection');
+  try {
+    const res = await fetch(BACKEND, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: b64, mediaType: mtype })
+    });
+    const result = await res.json();
+    if (result.error) { showError('Error: ' + result.error); return; }
+    document.getElementById('rName').textContent = result.name || '—';
+    document.getElementById('rConf').textContent = result.confidence || '—';
+    document.getElementById('rCat').textContent = result.category || '—';
+    document.getElementById('rVal').textContent = result.estimated_value || '—';
+    document.getElementById('rOrigin').textContent = result.origin_period || '—';
+    document.getElementById('rRarity').textContent = result.rarity || '—';
+    document.getElementById('rDesc').textContent = result.description || '—';
+    hide('loadingSection'); show('resultSection');
+  } catch(err) {
+    showError('Something went wrong. Please try again.\n\n' + err.message);
+  }
+}
+
+function shareResult() {
+  const name = document.getElementById('rName').textContent;
+  const val = document.getElementById('rVal').textContent;
+  const text = 'AI identified this as: ' + name + ' (Est. value: ' + val + ') — via SnapID';
+  if (navigator.share) { navigator.share({ title: 'SnapID Result', text }); }
+  else { navigator.clipboard.writeText(text).then(() => alert('Copied!')); }
+}
+
+function resetApp() {
+  b64 = null; mtype = null;
+  document.getElementById('fileInput').value = '';
+  show('uploadSection'); hide('previewSection');
+  hide('loadingSection'); hide('resultSection'); hide('errorSection');
+}
+
+function showError(msg) {
+  hide('loadingSection'); hide('previewSection');
+  document.getElementById('errorMsg').textContent = msg;
+  show('errorSection');
+}
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+</script>
+</body>
+</html></style>
 </head>
 <body>
 <div class="app">
