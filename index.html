@@ -204,6 +204,63 @@ input[type=file] { display: none; }
 .nav-btn.active { color: var(--blue); }
 .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 
+/* RECENTLY IDENTIFIED EXAMPLES */
+.examples-section { margin: 0 16px 16px; }
+.examples-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.example-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.example-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
+.example-info { flex: 1; min-width: 0; }
+.example-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; color: var(--text); }
+.example-meta { font-size: 12px; }
+.example-meta .val { color: var(--green); font-weight: 600; }
+.example-meta .sep { color: var(--text3); margin: 0 6px; }
+.example-meta .rarity { color: var(--amber); }
+
+/* TRUST SIGNALS */
+.trust-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 0 16px 20px; font-size: 11px; color: var(--text2); flex-wrap: wrap; padding: 8px; }
+.trust-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.trust-item.ts-sep { color: var(--text3); }
+
+/* SCAN FRAME PULSE */
+@keyframes scanPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.scan-corner { animation: scanPulse 2.5s ease-in-out infinite; }
+.sc-tr { animation-delay: 0.6s; }
+.sc-bl { animation-delay: 1.2s; }
+.sc-br { animation-delay: 1.8s; }
+
+/* FLOATING PARTICLES IN HERO */
+.hero-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--blue);
+  opacity: 0;
+  pointer-events: none;
+  animation: heroFloat 6s ease-in-out infinite;
+  box-shadow: 0 0 6px currentColor;
+  z-index: 1;
+}
+.hp-1 { top: 70%; left: 22%; animation-delay: 0s; }
+.hp-2 { top: 80%; left: 60%; animation-delay: 1.5s; }
+.hp-3 { top: 65%; left: 78%; animation-delay: 3s; background: var(--blue2); }
+.hp-4 { top: 75%; left: 38%; animation-delay: 4.5s; background: var(--blue2); }
+@keyframes heroFloat {
+  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+  20%  { opacity: 0.7; transform: translateY(-12px) scale(1); }
+  50%  { opacity: 0.5; transform: translateY(-40px) scale(0.8); }
+  80%  { opacity: 0; transform: translateY(-80px) scale(0.3); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0); }
+}
+
+/* ACCESSIBILITY — reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .scan-corner, .hero-particle, .ring, .rdot { animation: none !important; }
+}
+
 .hidden { display: none; }
 </style>
 </head>
@@ -228,6 +285,10 @@ input[type=file] { display: none; }
       <div class="hero">
         <div class="hero-card" onclick="document.getElementById('fileInput').click()">
           <div class="hero-glow"></div>
+          <div class="hero-particle hp-1"></div>
+          <div class="hero-particle hp-2"></div>
+          <div class="hero-particle hp-3"></div>
+          <div class="hero-particle hp-4"></div>
           <div class="hero-scan-icon">
             <div class="scan-frame">
               <div class="scan-corner sc-tl"></div>
@@ -277,6 +338,39 @@ input[type=file] { display: none; }
           <div class="how-step"><div class="how-step-num">2</div><div class="how-step-text">AI analyzes instantly</div></div>
           <div class="how-step"><div class="how-step-num">3</div><div class="how-step-text">Get full details & value</div></div>
         </div>
+      </div>
+
+      <div class="examples-section">
+        <div class="examples-label">Recently identified</div>
+        <div class="example-card">
+          <div class="example-icon">🪙</div>
+          <div class="example-info">
+            <div class="example-name">1881 Liberty Head Coin</div>
+            <div class="example-meta"><span class="val">$1,200</span><span class="sep">·</span><span class="rarity">Very Rare</span></div>
+          </div>
+        </div>
+        <div class="example-card">
+          <div class="example-icon">⌚</div>
+          <div class="example-info">
+            <div class="example-name">Vintage Rolex Submariner</div>
+            <div class="example-meta"><span class="val">$4,500</span><span class="sep">·</span><span class="rarity">Rare</span></div>
+          </div>
+        </div>
+        <div class="example-card">
+          <div class="example-icon">🏺</div>
+          <div class="example-info">
+            <div class="example-name">Ming Dynasty Vase</div>
+            <div class="example-meta"><span class="val">$8,200</span><span class="sep">·</span><span class="rarity">Very Rare</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trust-row">
+        <div class="trust-item">🤖 Powered by Claude AI</div>
+        <div class="trust-item ts-sep">·</div>
+        <div class="trust-item">🔒 Privacy-first</div>
+        <div class="trust-item ts-sep">·</div>
+        <div class="trust-item">⚡ Results in 3 seconds</div>
       </div>
     </div>
 
