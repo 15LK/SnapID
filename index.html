@@ -204,63 +204,6 @@ input[type=file] { display: none; }
 .nav-btn.active { color: var(--blue); }
 .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 
-/* RECENTLY IDENTIFIED EXAMPLES */
-.examples-section { margin: 0 16px 16px; }
-.examples-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-.example-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.example-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
-.example-info { flex: 1; min-width: 0; }
-.example-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; color: var(--text); }
-.example-meta { font-size: 12px; }
-.example-meta .val { color: var(--green); font-weight: 600; }
-.example-meta .sep { color: var(--text3); margin: 0 6px; }
-.example-meta .rarity { color: var(--amber); }
-
-/* TRUST SIGNALS */
-.trust-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 0 16px 20px; font-size: 11px; color: var(--text2); flex-wrap: wrap; padding: 8px; }
-.trust-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.trust-item.ts-sep { color: var(--text3); }
-
-/* SCAN FRAME PULSE */
-@keyframes scanPulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-}
-.scan-corner { animation: scanPulse 2.5s ease-in-out infinite; }
-.sc-tr { animation-delay: 0.6s; }
-.sc-bl { animation-delay: 1.2s; }
-.sc-br { animation-delay: 1.8s; }
-
-/* FLOATING PARTICLES IN HERO */
-.hero-particle {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--blue);
-  opacity: 0;
-  pointer-events: none;
-  animation: heroFloat 6s ease-in-out infinite;
-  box-shadow: 0 0 6px currentColor;
-  z-index: 1;
-}
-.hp-1 { top: 70%; left: 22%; animation-delay: 0s; }
-.hp-2 { top: 80%; left: 60%; animation-delay: 1.5s; }
-.hp-3 { top: 65%; left: 78%; animation-delay: 3s; background: var(--blue2); }
-.hp-4 { top: 75%; left: 38%; animation-delay: 4.5s; background: var(--blue2); }
-@keyframes heroFloat {
-  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
-  20%  { opacity: 0.7; transform: translateY(-12px) scale(1); }
-  50%  { opacity: 0.5; transform: translateY(-40px) scale(0.8); }
-  80%  { opacity: 0; transform: translateY(-80px) scale(0.3); }
-  100% { opacity: 0; transform: translateY(-80px) scale(0); }
-}
-
-/* ACCESSIBILITY — reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  .scan-corner, .hero-particle, .ring, .rdot { animation: none !important; }
-}
-
 .hidden { display: none; }
 </style>
 </head>
@@ -285,10 +228,6 @@ input[type=file] { display: none; }
       <div class="hero">
         <div class="hero-card" onclick="document.getElementById('fileInput').click()">
           <div class="hero-glow"></div>
-          <div class="hero-particle hp-1"></div>
-          <div class="hero-particle hp-2"></div>
-          <div class="hero-particle hp-3"></div>
-          <div class="hero-particle hp-4"></div>
           <div class="hero-scan-icon">
             <div class="scan-frame">
               <div class="scan-corner sc-tl"></div>
@@ -338,39 +277,6 @@ input[type=file] { display: none; }
           <div class="how-step"><div class="how-step-num">2</div><div class="how-step-text">AI analyzes instantly</div></div>
           <div class="how-step"><div class="how-step-num">3</div><div class="how-step-text">Get full details & value</div></div>
         </div>
-      </div>
-
-      <div class="examples-section">
-        <div class="examples-label">Recently identified</div>
-        <div class="example-card">
-          <div class="example-icon">🪙</div>
-          <div class="example-info">
-            <div class="example-name">1881 Liberty Head Coin</div>
-            <div class="example-meta"><span class="val">$1,200</span><span class="sep">·</span><span class="rarity">Very Rare</span></div>
-          </div>
-        </div>
-        <div class="example-card">
-          <div class="example-icon">⌚</div>
-          <div class="example-info">
-            <div class="example-name">Vintage Rolex Submariner</div>
-            <div class="example-meta"><span class="val">$4,500</span><span class="sep">·</span><span class="rarity">Rare</span></div>
-          </div>
-        </div>
-        <div class="example-card">
-          <div class="example-icon">🏺</div>
-          <div class="example-info">
-            <div class="example-name">Ming Dynasty Vase</div>
-            <div class="example-meta"><span class="val">$8,200</span><span class="sep">·</span><span class="rarity">Very Rare</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="trust-row">
-        <div class="trust-item">🤖 Powered by Claude AI</div>
-        <div class="trust-item ts-sep">·</div>
-        <div class="trust-item">🔒 Privacy-first</div>
-        <div class="trust-item ts-sep">·</div>
-        <div class="trust-item">⚡ Results in 3 seconds</div>
       </div>
     </div>
 
@@ -573,12 +479,84 @@ function activateCode(){
   else{err.classList.remove('hidden');setTimeout(()=>err.classList.add('hidden'),3000);}
 }
 
-function handleFile(file){
+// ── IMAGE RESIZE (Canvas API) ─────────────────────────────────────────────────
+// Resizes image to max 1200px on longest side, JPEG quality 0.85.
+// If result still >1MB, retries at quality 0.70.
+// Returns a dataURL (image/jpeg).
+function resizeImage(file) {
+  const MAX_SIDE = 1200;
+  const MAX_BYTES = 1 * 1024 * 1024; // 1MB
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Scale down only if needed (never upscale)
+        if (width > MAX_SIDE || height > MAX_SIDE) {
+          if (width >= height) {
+            height = Math.round(height * MAX_SIDE / width);
+            width = MAX_SIDE;
+          } else {
+            width = Math.round(width * MAX_SIDE / height);
+            height = MAX_SIDE;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+        // First attempt: quality 0.85
+        let dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        // Estimate decoded byte size: base64 chars * 0.75
+        const estimatedBytes = Math.ceil((dataUrl.length - dataUrl.indexOf(',') - 1) * 0.75);
+
+        // Second attempt if still too large: quality 0.70
+        if (estimatedBytes > MAX_BYTES) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.70);
+        }
+
+        resolve(dataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleFile(file){
   if(!file)return;
   if(!isPro()&&getScansLeft()===0){show('paywallSection');hide('uploadSection');return;}
-  const r=new FileReader();
-  r.onload=(e)=>{const d=e.target.result;mtype=file.type||'image/jpeg';b64=d.split(',')[1];currentImgSrc=d;document.getElementById('previewImg').src=d;show('previewSection');hide('uploadSection');hide('resultSection');hide('errorSection');hide('loadingSection');hide('paywallSection');};
-  r.readAsDataURL(file);
+
+  try {
+    const d = await resizeImage(file);
+    mtype = 'image/jpeg';
+    b64 = d.split(',')[1];
+    currentImgSrc = d;
+    document.getElementById('previewImg').src = d;
+    show('previewSection');
+    hide('uploadSection');hide('resultSection');hide('errorSection');hide('loadingSection');hide('paywallSection');
+  } catch(err) {
+    // Fallback: use original file if resize fails (e.g. unsupported format)
+    const r = new FileReader();
+    r.onload = (e) => {
+      const d = e.target.result;
+      mtype = file.type || 'image/jpeg';
+      b64 = d.split(',')[1];
+      currentImgSrc = d;
+      document.getElementById('previewImg').src = d;
+      show('previewSection');
+      hide('uploadSection');hide('resultSection');hide('errorSection');hide('loadingSection');hide('paywallSection');
+    };
+    r.readAsDataURL(file);
+  }
 }
 
 function getRarityScore(r){const s={'Common':30,'Uncommon':55,'Rare':75,'Very Rare':95};return s[r]||60;}
@@ -590,6 +568,7 @@ async function identify(){
   try{
     const res=await fetch(BACKEND,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:b64,mediaType:mtype})});
     const result=await res.json();
+    if(res.status===402){show('paywallSection');hide('loadingSection');return;}
     if(result.error){showError('Error: '+result.error);return;}
     if(!isPro())addScan();
     updateScansDisplay();currentResult=result;
@@ -622,30 +601,23 @@ function shareResult(){
     const canvas = document.createElement('canvas');
     canvas.width = 800; canvas.height = 500;
     const ctx = canvas.getContext('2d');
-    // Background
     ctx.fillStyle = '#0d0d24';
     ctx.fillRect(0,0,800,500);
-    // Accent bar
     const grad = ctx.createLinearGradient(0,0,800,0);
     grad.addColorStop(0,'#5282FF'); grad.addColorStop(1,'#8B85FF');
     ctx.fillStyle = grad; ctx.fillRect(0,0,800,6);
-    // Name
     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px sans-serif';
     ctx.fillText(name.length>35?name.substring(0,35)+'...':name, 40, 80);
-    // Category
     ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '18px sans-serif';
     ctx.fillText(cat, 40, 115);
-    // Value
     ctx.fillStyle = '#00D68F'; ctx.font = 'bold 28px sans-serif';
     ctx.fillText(val, 40, 200);
     ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '14px sans-serif';
     ctx.fillText('EST. VALUE', 40, 172);
-    // Rarity
     ctx.fillStyle = '#FFB830'; ctx.font = 'bold 22px sans-serif';
     ctx.fillText(rarity, 300, 200);
     ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '14px sans-serif';
     ctx.fillText('RARITY', 300, 172);
-    // Desc
     ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '15px sans-serif';
     const words = desc.split(' '); let line = ''; let y = 300;
     for(let w of words){
@@ -656,7 +628,6 @@ function shareResult(){
       } else { line = test; }
     }
     ctx.fillText(line, 40, y);
-    // SnapID brand
     ctx.fillStyle = '#5282FF'; ctx.font = 'bold 16px sans-serif';
     ctx.fillText('SnapID', 40, 470);
     ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '14px sans-serif';
@@ -666,7 +637,6 @@ function shareResult(){
       if(blob && navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'snapid.png',{type:'image/png'})]})){
         navigator.share({title:'SnapID — '+name, files:[new File([blob],'snapid.png',{type:'image/png'})]});
       } else {
-        // Fallback — download image
         const a = document.createElement('a');
         a.href = canvas.toDataURL('image/png');
         a.download = 'snapid-'+name.replace(/\s+/g,'-')+'.png';
@@ -674,7 +644,6 @@ function shareResult(){
       }
     });
   } catch(e) {
-    // Final fallback — text share
     const text='AI identified: '+name+' | Value: '+val+' | '+rarity+' — via SnapID snap-id-five.vercel.app';
     if(navigator.share){navigator.share({title:'SnapID Result',text});}
     else{navigator.clipboard.writeText(text).then(()=>alert('Copied!'));}
