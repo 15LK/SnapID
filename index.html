@@ -369,10 +369,10 @@ input[type=file] { display: none; }
           <a href="https://snapidapp.gumroad.com/l/uzpmiz" class="pw-btn" target="_blank">Upgrade to Pro — $2.99/mo</a>
           <div class="divider"><div class="dline"></div><div class="dtext">Already subscribed?</div><div class="dline"></div></div>
           <div class="code-row">
-            <input class="code-input" id="codeInput" type="text" placeholder="Enter access code" />
-            <button class="code-btn" onclick="activateCode()">Activate</button>
+            <input class="code-input" id="codeInput" type="email" placeholder="Enter your purchase email" />
+            <button class="code-btn" onclick="activateCode()">Verify</button>
           </div>
-          <div class="code-err hidden" id="codeError">Invalid code. Try again.</div>
+          <div class="code-err hidden" id="codeError">Email not found. Did you subscribe?</div>
           <div class="pw-note">7-day free trial · Cancel anytime</div>
         </div>
       </div>
@@ -419,8 +419,8 @@ input[type=file] { display: none; }
 <script>
 let b64=null,mtype=null,currentResult=null,currentImgSrc=null;
 const BACKEND='https://snapid-backend-production-0846.up.railway.app/identify';
+const VERIFY_BACKEND='https://snapid-backend-production-0846.up.railway.app/verify-email';
 const FREE_LIMIT=3;
-const PRO_CODES=['SNAPID-PRO-2025','SNAPIDPRO','SNAP-UNLIMITED'];
 
 function toggleTheme(){const h=document.documentElement;const d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');document.getElementById('themeBtn').textContent=d?'🌙':'☀️';localStorage.setItem('snapid_theme',d?'light':'dark');}
 const st=localStorage.getItem('snapid_theme')||'dark';
@@ -472,11 +472,42 @@ function renderSaved(){
 function deleteSaved(id){localStorage.setItem('snapid_saved',JSON.stringify(getSaved().filter(i=>i.id!==id)));renderSaved();}
 function clearAllSaved(){localStorage.removeItem('snapid_saved');renderSaved();}
 
-function activateCode(){
-  const code=document.getElementById('codeInput').value.trim().toUpperCase();
-  const err=document.getElementById('codeError');
-  if(PRO_CODES.includes(code)){localStorage.setItem('snapid_pro','true');hide('paywallSection');show('uploadSection');show('proSuccess');updateScansDisplay();setTimeout(()=>hide('proSuccess'),4000);}
-  else{err.classList.remove('hidden');setTimeout(()=>err.classList.add('hidden'),3000);}
+async function activateCode(){
+  const email = document.getElementById('codeInput').value.trim().toLowerCase();
+  const err = document.getElementById('codeError');
+  const btn = document.querySelector('.code-btn');
+  if(!email) return;
+
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(VERIFY_BACKEND, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+
+    if(data.valid){
+      localStorage.setItem('snapid_pro', 'true');
+      localStorage.setItem('snapid_pro_email', email);
+      hide('paywallSection'); show('uploadSection'); show('proSuccess');
+      updateScansDisplay();
+      setTimeout(()=>hide('proSuccess'), 4000);
+    } else {
+      err.textContent = 'Email not found. Please use the email you subscribed with.';
+      err.classList.remove('hidden');
+      setTimeout(()=>err.classList.add('hidden'), 4000);
+    }
+  } catch(e) {
+    err.textContent = 'Verification failed. Check your connection and try again.';
+    err.classList.remove('hidden');
+    setTimeout(()=>err.classList.add('hidden'), 4000);
+  } finally {
+    btn.textContent = 'Verify';
+    btn.disabled = false;
+  }
 }
 
 // ── IMAGE RESIZE (Canvas API) ─────────────────────────────────────────────────
