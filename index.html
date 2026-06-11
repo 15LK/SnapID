@@ -134,7 +134,18 @@ input[type=file] { display: none; }
 .conf-pill.conf-med { background: var(--amber-bg); color: var(--amber); border-color: rgba(255,184,48,0.2); }
 .conf-pill.conf-low { background: rgba(255,107,53,0.12); color: var(--orange); border-color: rgba(255,107,53,0.2); }
 .rcard-cat { font-size: 12px; color: rgba(255,255,255,0.5); }
-.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
+
+/* VALUE BAND (Track 2) */
+.value-band { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.value-band-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.value-band-amount { font-size: 32px; font-weight: 700; color: var(--green); line-height: 1.15; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+
+/* STAGGERED REVEAL (Track 2) */
+.reveal-item { opacity: 0; transform: translateY(8px); animation: revealUp 0.45s cubic-bezier(0.16,1,0.3,1) forwards; }
+@keyframes revealUp { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .reveal-item { animation: none; opacity: 1; transform: none; } }
+
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); }
 .info-cell { background: var(--bg2); padding: 12px 10px; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .info-cell .cell-info { min-width: 0; flex: 1; }
 .info-cell .cell-val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -319,18 +330,18 @@ input[type=file] { display: none; }
     <div id="resultSection" class="hidden">
       <div class="result">
         <div class="rcard">
-          <div class="rcard-hero">
+          <div class="rcard-hero reveal-item" style="animation-delay:0s">
             <div class="rcard-top">
               <div class="rcard-name" id="rName">—</div>
               <div class="conf-pill" id="rConf">—</div>
             </div>
             <div class="rcard-cat" id="rCat">—</div>
           </div>
-          <div class="info-grid">
-            <div class="info-cell">
-              <div class="cell-icon ci-green">💰</div>
-              <div class="cell-info"><div class="cell-label">Est. Value</div><div class="cell-val green" id="rVal">—</div></div>
-            </div>
+          <div class="value-band reveal-item" style="animation-delay:0.08s">
+            <div class="value-band-label">💰 Estimated Value</div>
+            <div class="value-band-amount" id="rVal">—</div>
+          </div>
+          <div class="info-grid reveal-item" style="animation-delay:0.16s">
             <div class="info-cell">
               <div class="cell-icon ci-blue">🌍</div>
               <div class="cell-info"><div class="cell-label">Origin</div><div class="cell-val" id="rOrigin">—</div></div>
@@ -340,11 +351,11 @@ input[type=file] { display: none; }
               <div class="cell-info"><div class="cell-label">Rarity</div><div class="cell-val amber" id="rRarity">—</div></div>
             </div>
           </div>
-          <div class="about-wrap">
+          <div class="about-wrap reveal-item" style="animation-delay:0.24s">
             <div class="about-label">About this object</div>
             <div class="about-text" id="rDesc">—</div>
           </div>
-          <div class="rcard-actions">
+          <div class="rcard-actions reveal-item" style="animation-delay:0.32s">
             <button class="abtn abtn-ghost" onclick="shareResult()">📤 Share</button>
             <button class="abtn abtn-save" id="saveBtn" onclick="saveResult()">🔖 Save</button>
             <button class="abtn abtn-primary" onclick="resetApp()">+ New</button>
@@ -644,6 +655,59 @@ function applyConfidencePill(confidenceStr){
   }
 }
 
+// ── VALUE COUNT-UP (Track 2) ──────────────────────────────────────────────────
+// Animates every number found in a string (e.g. "$150-$400" or "$8,000-$12,000")
+// counting up from 0 to its target over ~800ms, preserving the surrounding text,
+// thousands separators and decimal places. If the string has no numbers
+// (e.g. "Priceless", "N/A") it's shown instantly with no animation.
+function animateValue(el, text){
+  if(!el) return;
+  const str = text || '—';
+  const numRe = /[\d,]+(?:\.\d+)?/g;
+  const matches = str.match(numRe);
+
+  if(!matches || !matches.length){
+    el.textContent = str;
+    return;
+  }
+
+  const targets = matches.map(m => parseFloat(m.replace(/,/g,'')));
+  const decimalsList = matches.map(m => (m.includes('.') ? m.split('.')[1].length : 0));
+  const groupedList = matches.map(m => m.includes(','));
+  const duration = 800;
+  const start = performance.now();
+
+  function formatNum(num, decimals, grouped){
+    let s = num.toFixed(decimals);
+    if(grouped){
+      const parts = s.split('.');
+      parts[0] = Math.round(parseFloat(parts[0])).toLocaleString('en-US');
+      s = parts.join('.');
+    }
+    return s;
+  }
+
+  function frame(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    let i = 0;
+    el.textContent = str.replace(numRe, () => {
+      const val = targets[i] * eased;
+      const out = formatNum(val, decimalsList[i], groupedList[i]);
+      i++;
+      return out;
+    });
+    if(t < 1) requestAnimationFrame(frame);
+  }
+
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    el.textContent = str;
+    return;
+  }
+
+  requestAnimationFrame(frame);
+}
+
 async function identify(){
   if(!b64)return;
   if(!isPro()&&getScansLeft()===0){show('paywallSection');hide('previewSection');return;}
@@ -660,7 +724,7 @@ async function identify(){
     document.getElementById('rName').textContent=result.name||'—';
     applyConfidencePill(result.confidence);
     document.getElementById('rCat').textContent=result.category||'—';
-    document.getElementById('rVal').textContent=result.estimated_value||'—';
+    animateValue(document.getElementById('rVal'), result.estimated_value);
     document.getElementById('rOrigin').textContent=result.origin_period||'—';
     document.getElementById('rRarity').textContent=result.rarity||'—';
     document.getElementById('rDesc').textContent=result.description||'—';
