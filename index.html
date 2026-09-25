@@ -429,8 +429,8 @@ input[type=file] { display: none; }
 
 <script>
 let b64=null,mtype=null,currentResult=null,currentImgSrc=null;
-const BACKEND='https://snapid-backend-production-0846.up.railway.app/identify';
-const VERIFY_BACKEND='https://snapid-backend-production-0846.up.railway.app/verify-email';
+const BACKEND='/api/identify';
+const VERIFY_BACKEND='/api/verify-email';
 const FREE_LIMIT=3;
 
 function toggleTheme(){const h=document.documentElement;const d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');document.getElementById('themeBtn').textContent=d?'🌙':'☀️';localStorage.setItem('snapid_theme',d?'light':'dark');}
